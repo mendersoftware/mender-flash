@@ -12,9 +12,32 @@
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
 
-#include <gtest/gtest.h>
+#include <common/testing.hpp>
 
-int main(int argc, char *argv[]) {
-	::testing::InitGoogleTest(&argc, argv);
-	return RUN_ALL_TESTS();
+#include <filesystem>
+#include <random>
+
+namespace mender {
+namespace common {
+namespace testing {
+
+namespace fs = std::filesystem;
+
+TemporaryDirectory::TemporaryDirectory() {
+	fs::path path = fs::temp_directory_path();
+	path.append("mender-test-" + std::to_string(std::random_device()()));
+	fs::create_directories(path);
+	path_ = path;
 }
+
+TemporaryDirectory::~TemporaryDirectory() {
+	fs::remove_all(path_);
+}
+
+std::string TemporaryDirectory::Path() {
+	return path_;
+}
+
+} // namespace testing
+} // namespace common
+} // namespace mender
