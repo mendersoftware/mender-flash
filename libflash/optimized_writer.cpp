@@ -33,20 +33,17 @@ Error OptimizedWriter::Copy(bool optimized) {
 
 	io::Bytes rv(blockSize_);
 	io::Bytes wv(blockSize_);
-	bool volumeSizeReached = false;
 
 	size_t position = 0;
 
 	while (true) {
-		if (volumeSize_ && ((position + blockSize_) > volumeSize_)) {
-			volumeSizeReached = true;
-		}
-
 		auto result = reader_.Read(rv.begin(), rv.end());
 		if (!result) {
 			return result.error();
-		} else if (result.value() == 0) {
-			if (volumeSize_ && !volumeSizeReached) {
+		}
+
+		if (result.value() == 0) {
+			if (volumeSize_ && position < volumeSize_) {
 				return Error(
 					std::errc::io_error,
 					"Size of the destination volume not reached, source too short.");
@@ -57,7 +54,7 @@ Error OptimizedWriter::Copy(bool optimized) {
 			return mender::common::error::MakeError(
 				mender::common::error::ProgrammingError,
 				"Read returned more bytes than requested. This is a bug in the Read function.");
-		} else if (volumeSizeReached) {
+		} else if (volumeSize_ && (position + result.value()) > volumeSize_) {
 			return Error(
 				std::errc::io_error, "Reached size of the destination volume, source too big.");
 		}
