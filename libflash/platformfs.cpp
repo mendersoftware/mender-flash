@@ -226,7 +226,7 @@ ExpectedBool mender::io::IsUBIDevice(const string &path) {
 		return expected::unexpected(MakeErrorFromErrno(errno, ss));
 	}
 
-	return S_ISBLK(statbuf.st_mode) && major(statbuf.st_rdev) == UBIMajorDevNo;
+	return S_ISCHR(statbuf.st_mode) && major(statbuf.st_rdev) == UBIMajorDevNo;
 }
 
 Error mender::io::SetUbiUpdateVolume(File f, size_t size) {
