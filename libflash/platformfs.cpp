@@ -27,7 +27,7 @@
 #include <mtd/ubi-user.h>
 
 static const int InvalidFileDescriptor = -1;
-static const int UBIMajorDevNo = 10;
+static const int UBIMajorDevNo = 250;
 
 static Error MakeErrorFromErrno(int err, std::stringstream &str) {
 	str << ": " << strerror(err);
