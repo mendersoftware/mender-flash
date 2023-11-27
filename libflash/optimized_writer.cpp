@@ -61,12 +61,6 @@ Error OptimizedWriter::Copy(bool optimized) {
 
 		auto readBytes = result.value();
 
-		if (NoError != readWriter_.SeekSet(position)) {
-			return Error(
-				std::error_condition(std::errc::io_error),
-				"Failed to set seek on the destination file");
-		}
-
 		bool skipWriting = false;
 		if (optimized) {
 			// not checking for short read, it is not expected unless
@@ -79,10 +73,15 @@ Error OptimizedWriter::Copy(bool optimized) {
 					++statistics_.blocksOmitted_;
 				}
 			}
+
+			if (!skipWriting && NoError != readWriter_.SeekSet(position)) {
+				return Error(
+					std::error_condition(std::errc::io_error),
+					"Failed to set seek on the destination file");
+			}
 		}
 
 		if (!skipWriting) {
-			readWriter_.SeekSet(position);
 			auto res = readWriter_.Write(rv.begin(), rv.begin() + readBytes);
 			if (res && res.value() == readBytes) {
 				++statistics_.blocksWritten_;
