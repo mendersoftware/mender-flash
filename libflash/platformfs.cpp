@@ -27,7 +27,7 @@
 #include <mtd/ubi-user.h>
 
 static const int InvalidFileDescriptor = -1;
-static const int UBIMajorDevNo = 10;
+static const int UBIMajorDevNo = 250;
 
 static Error MakeErrorFromErrno(int err, std::stringstream &str) {
 	str << ": " << strerror(err);
@@ -226,12 +226,14 @@ ExpectedBool mender::io::IsUBIDevice(const string &path) {
 		return expected::unexpected(MakeErrorFromErrno(errno, ss));
 	}
 
-	return S_ISBLK(statbuf.st_mode) && major(statbuf.st_rdev) == UBIMajorDevNo;
+	return S_ISCHR(statbuf.st_mode) && major(statbuf.st_rdev) == UBIMajorDevNo;
 }
 
 Error mender::io::SetUbiUpdateVolume(File f, size_t size) {
 	errno = 0;
-	ioctl(f, UBI_IOCVOLUP, &size);
+	// Argument is 64-bit, even on 32-bit platforms.
+	int64_t size64 {static_cast<int64_t>(size)};
+	ioctl(f, UBI_IOCVOLUP, &size64);
 	if (errno != 0) {
 		std::stringstream ss;
 		ss << "Error updating UBI volume";
