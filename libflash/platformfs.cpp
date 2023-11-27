@@ -231,7 +231,9 @@ ExpectedBool mender::io::IsUBIDevice(const string &path) {
 
 Error mender::io::SetUbiUpdateVolume(File f, size_t size) {
 	errno = 0;
-	ioctl(f, UBI_IOCVOLUP, &size);
+	// Argument is 64-bit, even on 32-bit platforms.
+	int64_t size64 {static_cast<int64_t>(size)};
+	ioctl(f, UBI_IOCVOLUP, &size64);
 	if (errno != 0) {
 		std::stringstream ss;
 		ss << "Error updating UBI volume";
