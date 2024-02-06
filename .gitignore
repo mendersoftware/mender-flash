@@ -13,6 +13,7 @@
 
 # Test binaries
 *_test
+tests/Testing/
 
 # Build artifacts
 /mender-flash
