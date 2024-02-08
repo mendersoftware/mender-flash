@@ -17,27 +17,25 @@ include:
 variables:
   GIT_SUBMODULE_STRATEGY: recursive
 
-test:no-tests:
+.test:static-template:
   tags:
     - mender-qa-worker-generic-light
   stage: test
   image: debian:11
   before_script:
     - apt update && apt install -yyq g++ cmake git make lcov pkg-config
+
+test:no-tests:
+  extends: .test:static-template
   script:
     - cmake -D BUILD_TESTS=OFF .
     - make --jobs=$(nproc --all) --keep-going
 
 test:unit:
-  tags:
-    - mender-qa-worker-generic-light
-  stage: test
-  image: debian:11
-  before_script:
-    - apt update && apt install -yyq g++ cmake git make lcov pkg-config
+  extends: .test:static-template
   script:
     - cmake -D COVERAGE=ON .
-    - make coverage
+    - make --jobs=$(nproc --all) --keep-going coverage
   artifacts:
     expire_in: 2w
     reports:
