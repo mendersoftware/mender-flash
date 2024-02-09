@@ -41,7 +41,7 @@ test:unit:
     reports:
       junit: reports/*.xml
     paths:
-      - coverage.lcov
+      - tests/coverage.lcov
 
 publish:tests:
   tags:
@@ -71,5 +71,5 @@ publish:tests:
     - cpp-coveralls
       --repo-token ${COVERALLS_TOKEN}
       --no-gcov
-      --lcov-file coverage.lcov
+      --lcov-file tests/coverage.lcov
 
