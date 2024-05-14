@@ -27,12 +27,20 @@
 #include <mtd/ubi-user.h>
 
 static const int InvalidFileDescriptor = -1;
-static const int UBIMajorDevNo = 250;
 
 static Error MakeErrorFromErrno(int err, std::stringstream &str) {
 	str << ": " << strerror(err);
 	return mender::common::error::Error(
 		std::error_code(err, std::generic_category()).default_error_condition(), str.str());
+}
+
+string mender::io::BaseName(const string &path) {
+	auto pos = path.rfind("/");
+	if (pos == string::npos) {
+		return path;
+	} else {
+		return string {path.begin() + pos, path.end()};
+	}
 }
 
 Error mender::io::Create(const string &p, int filePermission) {
@@ -217,16 +225,20 @@ ExpectedSize mender::io::WriteFile(const string &path, const Bytes &data) {
 }
 
 ExpectedBool mender::io::IsUBIDevice(const string &path) {
+	string sys_path = "/sys/class/ubi/" + BaseName(path);
+
 	errno = 0;
 	struct stat statbuf;
-	stat(path.c_str(), &statbuf);
-	if (errno != 0) {
+	int ret = stat(sys_path.c_str(), &statbuf);
+	if (ret == 0) {
+		return true;
+	} else if (errno == ENOENT) {
+		return false;
+	} else {
 		std::stringstream ss;
-		ss << "IsSpecialBlockDevice: Failed to obtain stats of the file";
+		ss << "IsUBIDevice: Failed to obtain stats of the file";
 		return expected::unexpected(MakeErrorFromErrno(errno, ss));
 	}
-
-	return S_ISCHR(statbuf.st_mode) && major(statbuf.st_rdev) == UBIMajorDevNo;
 }
 
 Error mender::io::SetUbiUpdateVolume(File f, size_t size) {
