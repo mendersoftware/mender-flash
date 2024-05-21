@@ -37,6 +37,8 @@ using Bytes = std::vector<uint8_t>;
 
 const int DEFAULT_FILE_PERMISSION = 0644;
 
+string BaseName(const string &path);
+
 ///
 /// \brief Create
 /// \param p: path
