@@ -65,7 +65,7 @@ add_library(testlib STATIC ${TESTLIB_SOURCES})
 target_include_directories(testlib PUBLIC ${CMAKE_SOURCE_DIR})
 target_link_libraries(testlib PUBLIC platform_compiler_flags)
 
-add_executable(mender-flash_test EXCLUDE_FROM_ALL "main_test.cpp" "flash_test/optimized_writer_test.cpp" "flash_test/platformfs_test.cpp")
+add_executable(mender-flash_test EXCLUDE_FROM_ALL "main_test.cpp" "libflash/optimized_writer_test.cpp" "libflash/platformfs_test.cpp")
 target_include_directories(mender-flash_test PUBLIC ${CMAKE_SOURCE_DIR} libflash common)
 target_link_libraries(mender-flash_test PRIVATE GTest::gtest_main flashlib testlib)
 gtest_discover_tests(mender-flash_test ${MENDER_TEST_FLAGS})
