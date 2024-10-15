@@ -35,7 +35,8 @@ namespace expected = mender::common::expected;
 using mender::common::error::Error;
 using mender::common::error::NoError;
 
-using ExpectedSize = expected::expected<size_t, Error>;
+using ExpectedSize = expected::ExpectedSize;
+using ExpectedSize64 = expected::ExpectedSize64;
 
 class Reader {
 public:
