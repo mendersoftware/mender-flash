@@ -44,14 +44,14 @@ protected:
 
 class LimitedFlushingWriter : public FileWriter {
 public:
-	LimitedFlushingWriter(File f, size_t limit, uint32_t flushInterval = 1);
+	LimitedFlushingWriter(File f, int64_t limit, ssize_t flushInterval = 1);
 	virtual ExpectedSize Write(
 		vector<uint8_t>::const_iterator start, vector<uint8_t>::const_iterator end) override;
 
 protected:
-	size_t writingLimit_ {0};
-	uint32_t flushIntervalBytes_;
-	uint32_t unflushedBytesWritten_ {0};
+	int64_t writingLimit_ {0};
+	ssize_t flushIntervalBytes_;
+	int64_t unflushedBytesWritten_ {0};
 };
 
 class FileReader : public common::io::Reader {
@@ -60,7 +60,7 @@ public:
 	virtual ~FileReader();
 	virtual ExpectedSize Read(
 		vector<uint8_t>::iterator start, vector<uint8_t>::iterator end) override;
-	virtual ExpectedSize Tell() const;
+	virtual ExpectedSize64 Tell() const;
 
 	///
 	/// \brief GetFile
@@ -81,10 +81,10 @@ public:
 	InputStreamReader();
 	virtual ExpectedSize Read(
 		vector<uint8_t>::iterator start, vector<uint8_t>::iterator end) override;
-	virtual ExpectedSize Tell() const override;
+	virtual ExpectedSize64 Tell() const override;
 
 protected:
-	size_t readBytes_;
+	int64_t readBytes_;
 };
 
 class FileReadWriter : public common::io::ReadWriter {
@@ -116,7 +116,7 @@ public:
 	virtual ExpectedSize Write(
 		vector<uint8_t>::const_iterator start, vector<uint8_t>::const_iterator end) override;
 	Error SeekSet(uint64_t pos);
-	virtual ExpectedSize Tell() const;
+	virtual ExpectedSize64 Tell() const;
 
 protected:
 	FileWriter &writer_;

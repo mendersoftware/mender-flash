@@ -26,16 +26,16 @@ public:
 		io::FileReader &reader,
 		io::FileReadWriterSeeker &writer,
 		size_t blockSize = 1024 * 1024,
-		size_t volumeSize = 0);
+		int64_t volumeSize = 0);
 	common::error::Error Copy(bool optimized);
 
 	void PrintStatistics() const;
 
 	struct Statistics {
-		size_t blocksWritten_ {0};
-		size_t blocksOmitted_ {0};
-		size_t bytesWritten_ {0};
-		size_t bytesTotal_ {0};
+		int64_t blocksWritten_ {0};
+		int64_t blocksOmitted_ {0};
+		int64_t bytesWritten_ {0};
+		int64_t bytesTotal_ {0};
 	};
 
 	const Statistics &GetStatistics() const {
@@ -46,7 +46,7 @@ private:
 	size_t blockSize_;
 	io::FileReader &reader_;
 	io::FileReadWriterSeeker &readWriter_;
-	size_t volumeSize_ {0};
+	int64_t volumeSize_ {0};
 
 	Statistics statistics_;
 };
