@@ -63,7 +63,7 @@ ExpectedSize mender::io::LimitedFlushingWriter::Write(
 	vector<uint8_t>::const_iterator start, vector<uint8_t>::const_iterator end) {
 	auto pos = mender::io::Tell(fd_);
 	if (!pos.has_value()) {
-		return pos;
+		return expected::unexpected(pos.error());
 	}
 	auto dataLen = end - start;
 	if (writingLimit_ && pos.value() + dataLen > writingLimit_) {
