@@ -23,7 +23,8 @@ using namespace std;
 namespace expected = mender::common::expected;
 using mender::common::error::Error;
 using mender::common::error::NoError;
-using ExpectedSize = expected::expected<size_t, Error>;
+using ExpectedSize = expected::ExpectedSize;
+using ExpectedSize64 = expected::ExpectedSize64;
 using ExpectedString = expected::expected<std::string, Error>;
 using ExpectedBool = expected::expected<bool, Error>;
 
@@ -67,7 +68,7 @@ Error Close(File f);
 /// \param f: file
 /// \return size of the file
 ///
-ExpectedSize GetSize(File f);
+ExpectedSize64 GetSize(File f);
 
 ///
 /// \brief Read
@@ -107,7 +108,7 @@ Error SeekSet(File f, uint64_t pos);
 /// \param f: file
 /// \return current position of the file seek
 ///
-ExpectedSize Tell(File f);
+ExpectedSize64 Tell(File f);
 
 ///
 /// \brief GetInputStream
@@ -141,7 +142,7 @@ ExpectedBool IsUBIDevice(const std::string &path);
 /// \param size
 /// \return
 ///
-Error SetUbiUpdateVolume(File f, size_t size);
+Error SetUbiUpdateVolume(File f, int64_t size);
 
 ///
 /// \brief WriteFile: opens a file (creates if doesn't exist), writes the data and closes the file

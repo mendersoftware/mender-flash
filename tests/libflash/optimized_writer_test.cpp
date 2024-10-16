@@ -27,7 +27,7 @@ public:
 		ss_(str),
 		reader_(ss_) {
 	}
-	virtual ExpectedSize Tell() const override {
+	virtual ExpectedSize64 Tell() const override {
 		return bytesRead_;
 	}
 	virtual ExpectedSize Read(
@@ -42,7 +42,7 @@ public:
 private:
 	std::stringstream ss_;
 	mender::common::io::StreamReader reader_;
-	size_t bytesRead_ {0};
+	int64_t bytesRead_ {0};
 };
 
 TEST_F(OptimizedWriterTest, TestFlushingLimitWriterWrite) {

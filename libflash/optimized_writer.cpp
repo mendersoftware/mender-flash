@@ -18,7 +18,10 @@
 using namespace mender::io;
 
 OptimizedWriter::OptimizedWriter(
-	io::FileReader &reader, io::FileReadWriterSeeker &writer, size_t blockSize, size_t volumeSize) :
+	io::FileReader &reader,
+	io::FileReadWriterSeeker &writer,
+	size_t blockSize,
+	int64_t volumeSize) :
 	blockSize_(blockSize),
 	reader_(reader),
 	readWriter_(writer),
@@ -34,7 +37,7 @@ Error OptimizedWriter::Copy(bool optimized) {
 	io::Bytes rv(blockSize_);
 	io::Bytes wv(blockSize_);
 
-	size_t position = 0;
+	int64_t position = 0;
 
 	while (true) {
 		auto result = reader_.Read(rv.begin(), rv.end());
@@ -54,7 +57,7 @@ Error OptimizedWriter::Copy(bool optimized) {
 			return mender::common::error::MakeError(
 				mender::common::error::ProgrammingError,
 				"Read returned more bytes than requested. This is a bug in the Read function.");
-		} else if (volumeSize_ && (position + result.value()) > volumeSize_) {
+		} else if (volumeSize_ && (position + static_cast<int64_t>(result.value())) > volumeSize_) {
 			return Error(
 				std::errc::io_error, "Reached size of the destination volume, source too big.");
 		}

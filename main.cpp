@@ -27,7 +27,7 @@ void PrintHelp() {
 }
 
 int main(int argc, char *argv[]) {
-	size_t volumeSize = 0;
+	int64_t volumeSize = 0;
 	std::string inputPath;
 	std::string outputPath;
 	const size_t blockSize = 1024 * 1024; // 1MiB block size
@@ -53,7 +53,7 @@ int main(int argc, char *argv[]) {
 		case 's': {
 			auto res = mender::common::StringToLongLong(optarg);
 			if (res) {
-				volumeSize = (size_t) res.value();
+				volumeSize = res.value();
 			} else {
 				std::cerr << res.error().message << std::endl;
 				;
