@@ -30,7 +30,7 @@ ExpectedSize mender::io::FileReader::Read(
 	return mender::io::Read(fd_, &*start, end - start);
 }
 
-ExpectedSize mender::io::FileReader::Tell() const {
+ExpectedSize64 mender::io::FileReader::Tell() const {
 	return mender::io::Tell(fd_);
 }
 
@@ -48,12 +48,12 @@ ExpectedSize mender::io::InputStreamReader::Read(
 	return res;
 }
 
-ExpectedSize mender::io::InputStreamReader::Tell() const {
+ExpectedSize64 mender::io::InputStreamReader::Tell() const {
 	return readBytes_;
 }
 
 mender::io::LimitedFlushingWriter::LimitedFlushingWriter(
-	mender::io::File f, size_t limit, uint32_t flushInterval) :
+	mender::io::File f, int64_t limit, ssize_t flushInterval) :
 	FileWriter(f),
 	writingLimit_(limit),
 	flushIntervalBytes_(flushInterval) {
@@ -63,7 +63,7 @@ ExpectedSize mender::io::LimitedFlushingWriter::Write(
 	vector<uint8_t>::const_iterator start, vector<uint8_t>::const_iterator end) {
 	auto pos = mender::io::Tell(fd_);
 	if (!pos.has_value()) {
-		return pos;
+		return expected::unexpected(pos.error());
 	}
 	auto dataLen = end - start;
 	if (writingLimit_ && pos.value() + dataLen > writingLimit_) {
@@ -136,6 +136,6 @@ Error mender::io::FileReadWriterSeeker::SeekSet(uint64_t pos) {
 	return mender::io::SeekSet(fd_, pos);
 }
 
-ExpectedSize mender::io::FileReadWriterSeeker::Tell() const {
+ExpectedSize64 mender::io::FileReadWriterSeeker::Tell() const {
 	return mender::io::Tell(fd_);
 }

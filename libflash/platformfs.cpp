@@ -84,7 +84,7 @@ Error mender::io::Close(File f) {
 	return NoError;
 }
 
-ExpectedSize mender::io::GetSize(mender::io::File f) {
+ExpectedSize64 mender::io::GetSize(mender::io::File f) {
 	struct stat statbuf;
 	errno = 0;
 	fstat(f, &statbuf);
@@ -94,7 +94,7 @@ ExpectedSize mender::io::GetSize(mender::io::File f) {
 		return expected::unexpected(MakeErrorFromErrno(errno, ss));
 	}
 
-	size_t size;
+	int64_t size;
 	if (S_ISBLK(statbuf.st_mode)) {
 		ioctl(f, BLKGETSIZE64, &size);
 		if (errno != 0) {
@@ -169,9 +169,9 @@ Error mender::io::SeekSet(mender::io::File f, uint64_t pos) {
 	return NoError;
 }
 
-ExpectedSize mender::io::Tell(mender::io::File f) {
+ExpectedSize64 mender::io::Tell(mender::io::File f) {
 	errno = 0;
-	ssize_t pos = lseek64(f, 0, SEEK_CUR);
+	int64_t pos = lseek64(f, 0, SEEK_CUR);
 	if (errno != 0) {
 		std::stringstream ss;
 		ss << "Error while getting file position";
@@ -241,7 +241,7 @@ ExpectedBool mender::io::IsUBIDevice(const string &path) {
 	}
 }
 
-Error mender::io::SetUbiUpdateVolume(File f, size_t size) {
+Error mender::io::SetUbiUpdateVolume(File f, int64_t size) {
 	errno = 0;
 	// Argument is 64-bit, even on 32-bit platforms.
 	int64_t size64 {static_cast<int64_t>(size)};
