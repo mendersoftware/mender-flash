@@ -32,6 +32,11 @@ add_library(crossplatform_compiler_flags INTERFACE)
 target_compile_features(crossplatform_compiler_flags INTERFACE cxx_std_11)
 target_compile_options(crossplatform_compiler_flags INTERFACE -std=c++11 -Werror -Wall -Wconversion)
 
+# use the 64bit variants of filesystem functions consistently. improves
+# compatibility with musl, which only exposes the 64bit variants, but without
+# the name suffix.
+target_compile_definitions(crossplatform_compiler_flags INTERFACE _FILE_OFFSET_BITS=64)
+
 add_library(platform_compiler_flags INTERFACE)
 target_compile_features(platform_compiler_flags INTERFACE cxx_std_17)
 target_compile_options(platform_compiler_flags INTERFACE -std=c++17 -Werror -Wall -Wconversion)

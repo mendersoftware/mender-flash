@@ -160,7 +160,7 @@ Error mender::io::Flush(File f) {
 
 Error mender::io::SeekSet(mender::io::File f, uint64_t pos) {
 	errno = 0;
-	lseek64(f, pos, SEEK_SET);
+	lseek(f, pos, SEEK_SET);
 	if (errno != 0) {
 		std::stringstream ss;
 		ss << "Can't set seek on the file";
@@ -171,7 +171,7 @@ Error mender::io::SeekSet(mender::io::File f, uint64_t pos) {
 
 ExpectedSize64 mender::io::Tell(mender::io::File f) {
 	errno = 0;
-	int64_t pos = lseek64(f, 0, SEEK_CUR);
+	int64_t pos = lseek(f, 0, SEEK_CUR);
 	if (errno != 0) {
 		std::stringstream ss;
 		ss << "Error while getting file position";
