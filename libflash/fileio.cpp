@@ -27,7 +27,7 @@ mender::io::FileReader::~FileReader() {
 
 ExpectedSize mender::io::FileReader::Read(
 	vector<uint8_t>::iterator start, vector<uint8_t>::iterator end) {
-	return mender::io::Read(fd_, &*start, end - start);
+	return mender::io::Read(fd_, &*start, static_cast<size_t>(end - start));
 }
 
 ExpectedSize64 mender::io::FileReader::Tell() const {
@@ -99,7 +99,7 @@ mender::io::FileWriter::~FileWriter() {
 
 ExpectedSize mender::io::FileWriter::Write(
 	vector<uint8_t>::const_iterator start, vector<uint8_t>::const_iterator end) {
-	return mender::io::Write(fd_, &*start, end - start);
+	return mender::io::Write(fd_, &*start, static_cast<size_t>(end - start));
 }
 
 mender::io::FileReadWriter::FileReadWriter(File f) :
@@ -114,12 +114,12 @@ mender::io::FileReadWriter::~FileReadWriter() {
 
 ExpectedSize mender::io::FileReadWriter::Read(
 	vector<uint8_t>::iterator start, vector<uint8_t>::iterator end) {
-	return mender::io::Read(fd_, &*start, end - start);
+	return mender::io::Read(fd_, &*start, static_cast<size_t>(end - start));
 }
 
 ExpectedSize mender::io::FileReadWriter::Write(
 	vector<uint8_t>::const_iterator start, vector<uint8_t>::const_iterator end) {
-	return mender::io::Write(fd_, &*start, end - start);
+	return mender::io::Write(fd_, &*start, static_cast<size_t>(end - start));
 }
 
 mender::io::FileReadWriterSeeker::FileReadWriterSeeker(FileWriter &writer) :

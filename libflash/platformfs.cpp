@@ -39,7 +39,7 @@ string mender::io::BaseName(const string &path) {
 	if (pos == string::npos) {
 		return path;
 	} else {
-		return string {path.begin() + pos, path.end()};
+		return string {path.begin() + static_cast<ssize_t>(pos), path.end()};
 	}
 }
 
@@ -121,7 +121,7 @@ ExpectedSize mender::io::Read(File f, uint8_t *dataPtr, size_t dataLen) {
 			ss << "Error while reading data";
 			return expected::unexpected(MakeErrorFromErrno(errno, ss));
 		}
-		bytesRead += readRes;
+		bytesRead += static_cast<size_t>(readRes);
 		if (readRes == 0 || bytesRead == dataLen) {
 			break;
 		}
@@ -144,7 +144,7 @@ ExpectedSize mender::io::Write(File f, const uint8_t *dataPtr, size_t dataLen) {
 		}
 		break;
 	}
-	return bytesWritten;
+	return static_cast<size_t>(bytesWritten);
 }
 
 Error mender::io::Flush(File f) {
@@ -160,7 +160,7 @@ Error mender::io::Flush(File f) {
 
 Error mender::io::SeekSet(mender::io::File f, uint64_t pos) {
 	errno = 0;
-	lseek(f, pos, SEEK_SET);
+	lseek(f, static_cast<off_t>(pos), SEEK_SET);
 	if (errno != 0) {
 		std::stringstream ss;
 		ss << "Can't set seek on the file";
@@ -220,7 +220,7 @@ ExpectedSize mender::io::WriteFile(const string &path, const Bytes &data) {
 		return err;
 	} else {
 		Close(fd);
-		return bytesWritten;
+		return static_cast<size_t>(bytesWritten);
 	}
 }
 

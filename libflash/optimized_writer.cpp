@@ -57,7 +57,7 @@ Error OptimizedWriter::Copy(bool optimized) {
 			return mender::common::error::MakeError(
 				mender::common::error::ProgrammingError,
 				"Read returned more bytes than requested. This is a bug in the Read function.");
-		} else if (volumeSize_ && (position + static_cast<int64_t>(result.value())) > volumeSize_) {
+		} else if (volumeSize_ && position + static_cast<int64_t>(result.value()) > volumeSize_) {
 			return Error(
 				std::errc::io_error, "Reached size of the destination volume, source too big.");
 		}
@@ -68,7 +68,7 @@ Error OptimizedWriter::Copy(bool optimized) {
 		if (optimized) {
 			// not checking for short read, it is not expected unless
 			// writing to an empty file
-			auto readResult = readWriter_.Read(wv.begin(), wv.begin() + readBytes);
+			auto readResult = readWriter_.Read(wv.begin(), wv.begin() + static_cast<int64_t>(readBytes));
 			if (readResult && readResult.value() == readBytes) {
 				wv.resize(readResult.value());
 				skipWriting = std::equal(rv.begin(), rv.end(), wv.data());
@@ -77,7 +77,7 @@ Error OptimizedWriter::Copy(bool optimized) {
 				}
 			}
 
-			if (!skipWriting && NoError != readWriter_.SeekSet(position)) {
+			if (!skipWriting && NoError != readWriter_.SeekSet(static_cast<uint64_t>(position))) {
 				return Error(
 					std::error_condition(std::errc::io_error),
 					"Failed to set seek on the destination file");
@@ -85,7 +85,7 @@ Error OptimizedWriter::Copy(bool optimized) {
 		}
 
 		if (!skipWriting) {
-			auto res = readWriter_.Write(rv.begin(), rv.begin() + readBytes);
+			auto res = readWriter_.Write(rv.begin(), rv.begin() + static_cast<int64_t>(readBytes));
 			if (res && res.value() == readBytes) {
 				++statistics_.blocksWritten_;
 				statistics_.bytesWritten_ += res.value();

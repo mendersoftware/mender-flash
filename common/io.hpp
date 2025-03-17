@@ -90,7 +90,7 @@ public:
 			return expected::unexpected(Error(
 				std::error_code(int_error, std::generic_category()).default_error_condition(), ""));
 		}
-		return is_.gcount();
+		return static_cast<size_t>(is_.gcount());
 	}
 };
 
@@ -98,7 +98,7 @@ public:
 class Discard : virtual public Writer {
 	ExpectedSize Write(
 		vector<uint8_t>::const_iterator start, vector<uint8_t>::const_iterator end) override {
-		return end - start;
+		return static_cast<size_t>(end - start);
 	}
 };
 

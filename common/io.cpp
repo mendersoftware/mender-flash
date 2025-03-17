@@ -36,7 +36,7 @@ Error Copy(Writer &dst, Reader &src, vector<uint8_t> &buffer) {
 				"Read returned more bytes than requested. This is a bug in the Read function.");
 		}
 
-		auto w_result = dst.Write(buffer.cbegin(), buffer.cbegin() + r_result.value());
+		auto w_result = dst.Write(buffer.cbegin(), buffer.cbegin() + static_cast<ssize_t>(r_result.value()));
 		if (!w_result) {
 			return w_result.error();
 		} else if (w_result.value() == 0) {
