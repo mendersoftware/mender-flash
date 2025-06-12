@@ -39,7 +39,7 @@ string mender::io::BaseName(const string &path) {
 	if (pos == string::npos) {
 		return path;
 	} else {
-		return string {path.begin() + pos, path.end()};
+		return string {path.begin() + pos + 1, path.end()};
 	}
 }
 
