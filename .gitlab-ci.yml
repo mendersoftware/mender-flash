@@ -17,9 +17,11 @@ include:
 variables:
   GIT_SUBMODULE_STRATEGY: recursive
 
-.test:static-template:
+default:
   tags:
-    - mender-qa-worker-generic-light
+    - oslo-xps
+
+.test:static-template:
   stage: test
   image: debian:11
   before_script:
@@ -44,8 +46,6 @@ test:unit:
       - tests/coverage.lcov
 
 publish:tests:
-  tags:
-    - mender-qa-worker-generic-light
   stage: publish
   image: python:3.11
   dependencies:
