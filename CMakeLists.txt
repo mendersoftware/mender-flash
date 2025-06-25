@@ -17,6 +17,15 @@ install(TARGETS mender-flash
   COMPONENT mender-flash
 )
 
+enable_testing()
+add_test(NAME tests
+  COMMAND "${CMAKE_CURRENT_SOURCE_DIR}/tests.sh" "${CMAKE_CURRENT_BINARY_DIR}"
+)
+add_custom_target(check
+  COMMAND ${CMAKE_CTEST_COMMAND} --output-on-failure
+  DEPENDS mender-flash
+)
+
 if($CACHE{COVERAGE})
   add_custom_target(coverage_enabled COMMAND true)
 else()
