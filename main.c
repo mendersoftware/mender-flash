@@ -12,6 +12,8 @@
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
 
+#define _GNU_SOURCE	 /* needed for splice() */
+
 #include <errno.h>
 #include <fcntl.h>
 #include <getopt.h>
@@ -22,6 +24,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <sys/ioctl.h>
+#include <sys/sendfile.h>
 #include <sys/stat.h>
 #include <sys/sysmacros.h>
 #include <unistd.h>
@@ -140,6 +143,14 @@ bool shovel_data(int in_fd, int out_fd, size_t len, bool write_optimized, size_t
 	}
 	return true;
 }
+
+#ifdef __linux__
+/* Same signature as sendfile() so that we can treat the same (see comment about
+ * splice() and sendfile() below). */
+ssize_t splice_sendfile(int out_fd, int in_fd, __attribute__(( unused )) off_t *offset, size_t count) {
+	return splice(in_fd, 0, out_fd, 0, count, 0);
+}
+#endif  /* __linux__ */
 
 int main(int argc, char *argv[]) {
 	char *input_path = NULL;
@@ -264,7 +275,51 @@ int main(int argc, char *argv[]) {
 	bool success = false;
 	int error = 0;
 
+#ifndef __linux__
+	/* Nothing better available for non-Linux platforms (for now). */
 	success = shovel_data(in_fd, out_fd, len, write_optimized, fsync_interval, &stats, &error);
+#else  /* __linux__ */
+	/* The fancy syscalls below don't support write-optimized approach or
+	   syncing so we cannot use them for that. */
+	if (write_optimized || (fsync_interval != 0)) {
+	    success = shovel_data(in_fd, out_fd, len, write_optimized, fsync_interval, &stats, &error);
+	} else {
+	    /***
+	    	On Linux the splice() and sendfile() syscalls can be useful for us (see
+	    	their descriptions taken from the respective man pages below), on other
+	    	operating systems there might be functions with the same names, but
+	    	potentially doing something completely different.
+
+	    	splice() moves  data  between two file descriptors without copying be‐
+	    	tween kernel address space and user address space.  It transfers up  to
+	    	len bytes of data from the file descriptor fd_in to the file descriptor
+	    	fd_out, where one of the file descriptors must refer to a pipe.
+
+	    	sendfile()  copies  data  between one file descriptor and another.  Be‐
+	    	cause this copying is done within the kernel, sendfile() is more  effi‐
+	    	cient than the combination of read(2) and write(2), which would require
+	    	transferring data to and from user space.
+	    	The   in_fd   argument   must  correspond  to  a  file  which  supports
+	    	mmap(2)-like operations (i.e., it cannot be a socket or a pipe).
+	    ***/
+	    ssize_t (*sendfile_fn)(int out_fd, int in_fd, off_t *offset, size_t count);
+	    if (S_ISFIFO(in_fd_stat.st_mode)) {
+	    	sendfile_fn = splice_sendfile;
+	    } else {
+	    	sendfile_fn = sendfile;
+	    }
+	    ssize_t ret;
+	    do {
+	    	ret = sendfile_fn(out_fd, in_fd, 0, len);
+	    	if (ret > 0) {
+	    	    len -= ret;
+	    	    stats.total_bytes += ret;
+	    	}
+	    } while ((ret > 0) && (len > 0));
+	    success = ((ret == 0) || ((ret > 0) && (len == 0)));
+	    error = errno;
+	}
+#endif  /* __linux__ */
 
 	close(in_fd);
 	close(out_fd);
