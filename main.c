@@ -292,7 +292,7 @@ int main(int argc, char *argv[]) {
 #else  /* __linux__ */
 	/* The fancy syscalls below don't support write-optimized approach or
 	   syncing so we cannot use them for that. */
-	if (write_optimized || (fsync_interval != 0)) {
+	if (write_optimized) {
 	    success = shovel_data(in_fd, out_fd, len, write_optimized, fsync_interval, &stats, &error);
 	} else {
 	    /***
@@ -319,12 +319,22 @@ int main(int argc, char *argv[]) {
 	    } else {
 	    	sendfile_fn = sendfile;
 	    }
+
+	    if (fsync_interval == 0) {
+	    	fsync_interval = len;
+	    }
 	    ssize_t ret;
+	    size_t n_unsynced = 0;
 	    do {
-	    	ret = sendfile_fn(out_fd, in_fd, 0, len);
+	    	ret = sendfile_fn(out_fd, in_fd, 0, MIN(len, fsync_interval));
 	    	if (ret > 0) {
 	    	    len -= ret;
 	    	    stats.total_bytes += ret;
+	    	    n_unsynced += ret;
+	    	    if (n_unsynced >= fsync_interval) {
+	    	    	fsync(out_fd);
+	    	    	n_unsynced = 0;
+	    	    }
 	    	}
 	    } while ((ret > 0) && (len > 0));
 	    success = ((ret == 0) || ((ret > 0) && (len == 0)));
