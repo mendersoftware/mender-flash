@@ -37,6 +37,7 @@ static struct option long_options[] = {
 	{"help", no_argument, 0, 'h'},
 	{"write-optimized", no_argument, 0, 'w'},
 	{"input-size", required_argument, 0, 's'},
+	{"fsync-interval", required_argument, 0, 'f'},
 	{"input", required_argument, 0, 'i'},
 	{"output", required_argument, 0, 'o'},
 	{0, 0, 0, 0}};
@@ -44,7 +45,7 @@ static struct option long_options[] = {
 void PrintHelp() {
 	fputs(
 		"Usage:\n"
-		"  mender-flash [-h|--help] [-w] [-s|--input-size <INPUT_SIZE>] -i|--input <INPUT_PATH> -o|--output <OUTPUT_PATH>\n",
+		"  mender-flash [-h|--help] [-w|--write-optimized] [-s|--input-size <INPUT_SIZE>] [-f|--fsync-interval <FSYNC_INTERVAL>] -i|--input <INPUT_PATH> -o|--output <OUTPUT_PATH>\n",
 		stderr);
 }
 
@@ -157,9 +158,10 @@ int main(int argc, char *argv[]) {
 	char *output_path = NULL;
 	uint64_t volume_size = 0;
 	bool write_optimized = false;
+	size_t fsync_interval = BLOCK_SIZE;
 
 	int option_index = 0;
-	int c = getopt_long(argc, argv, "hws:i:o:", long_options, &option_index);
+	int c = getopt_long(argc, argv, "hws:f:i:o:", long_options, &option_index);
 	while (c != -1) {
 		switch (c) {
 		case 'h':
@@ -182,6 +184,18 @@ int main(int argc, char *argv[]) {
 				return EXIT_FAILURE;
 			} else {
 				volume_size = ret;
+			}
+			break;
+		}
+
+		case 'f': {
+			char *end = optarg;
+			long long ret = strtoll(optarg, &end, 10);
+			if (((ret == 0) && (strcmp(optarg, "0") != 0)) || (*end != '\0')) {
+				fprintf(stderr, "Invalid fsync interval given: %s\n", optarg);
+				return EXIT_FAILURE;
+			} else {
+				fsync_interval = ret;
 			}
 			break;
 		}
@@ -243,8 +257,6 @@ int main(int argc, char *argv[]) {
 		return EXIT_FAILURE;
 	}
 
-	size_t fsync_interval = 0;
-
 	if (S_ISBLK(out_fd_stat.st_mode) && (major(out_fd_stat.st_rdev) == UBIMajorDevNo)) {
 		int ret = ioctl(out_fd, UBI_IOCVOLUP, &volume_size);
 		if (ret == -1) {
@@ -254,7 +266,6 @@ int main(int argc, char *argv[]) {
 			return EXIT_FAILURE;
 		}
 	    write_optimized = false;
-		fsync_interval = BLOCK_SIZE;
 	}
 
 	size_t len;
