@@ -35,7 +35,7 @@
 
 static struct option long_options[] = {
 	{"help", no_argument, 0, 'h'},
-	{"write-optimized", no_argument, 0, 'w'},
+	{"write-everything", no_argument, 0, 'w'},
 	{"input-size", required_argument, 0, 's'},
 	{"fsync-interval", required_argument, 0, 'f'},
 	{"input", required_argument, 0, 'i'},
@@ -45,7 +45,7 @@ static struct option long_options[] = {
 void PrintHelp() {
 	fputs(
 		"Usage:\n"
-		"  mender-flash [-h|--help] [-w|--write-optimized] [-s|--input-size <INPUT_SIZE>] [-f|--fsync-interval <FSYNC_INTERVAL>] -i|--input <INPUT_PATH> -o|--output <OUTPUT_PATH>\n",
+		"  mender-flash [-h|--help] [-w|--write-everything] [-s|--input-size <INPUT_SIZE>] [-f|--fsync-interval <FSYNC_INTERVAL>] -i|--input <INPUT_PATH> -o|--output <OUTPUT_PATH>\n",
 		stderr);
 }
 
@@ -157,7 +157,7 @@ int main(int argc, char *argv[]) {
 	char *input_path = NULL;
 	char *output_path = NULL;
 	uint64_t volume_size = 0;
-	bool write_optimized = false;
+	bool write_optimized = true;
 	size_t fsync_interval = BLOCK_SIZE;
 
 	int option_index = 0;
@@ -201,7 +201,7 @@ int main(int argc, char *argv[]) {
 		}
 
 	    case 'w':
-	        write_optimized = true;
+	        write_optimized = false;
 	        break;
 
 		default:
