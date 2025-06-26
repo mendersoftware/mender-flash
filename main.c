@@ -30,7 +30,6 @@
 #include <sys/sysmacros.h>
 #include <unistd.h>
 
-#define UBIMajorDevNo 10
 #define BLOCK_SIZE (1024 * 1024ULL) /* 1 MiB */
 
 #define MIN(X, Y) ((X < Y) ? X : Y)
@@ -156,6 +155,30 @@ bool shovel_data(int in_fd, int out_fd, off_t len, bool write_optimized, size_t 
     return true;
 }
 
+/**
+ * @return 1 if true, 0 if false, -1 in case of an error
+ */
+int is_ubi_device(char *path) {
+    char *sysfs_ubi_dir;
+    if (asprintf(&sysfs_ubi_dir, "/sys/class/ubi/%s", basename(path)) == -1) {
+        fprintf(stderr, "Cannot check if output '%s' is a UBI device: %m\n", path);
+        return -1;
+    }
+
+    struct stat sysfs_dir_stat;
+    int ret;
+    if (stat(sysfs_ubi_dir, &sysfs_dir_stat) == 0) {
+        ret = 1;
+    } else if (errno == ENOENT) {
+        ret = 0;
+    } else {
+        fprintf(stderr, "Failed to check if output '%s' is a UBI device: %m\n", path);
+        ret = -1;
+    }
+    free(sysfs_ubi_dir);
+    return ret;
+}
+
 #ifdef __linux__
 /* Same signature as sendfile() so that we can treat the same (see comment about
  * splice() and sendfile() below). */
@@ -267,16 +290,23 @@ int main(int argc, char *argv[]) {
         fprintf(stderr, "Failed to stat() output '%s': %m\n", output_path);
         return EXIT_FAILURE;
     }
-
-    if (S_ISBLK(out_fd_stat.st_mode) && (major(out_fd_stat.st_rdev) == UBIMajorDevNo)) {
-        int ret = ioctl(out_fd, UBI_IOCVOLUP, &volume_size);
+    if (S_ISCHR(out_fd_stat.st_mode)) {
+        int ret = is_ubi_device(output_path);
         if (ret == -1) {
+            /* error already logged */
             close(in_fd);
             close(out_fd);
-            fprintf(stderr, "Failed to setup UBI volume '%s': %m\n", output_path);
             return EXIT_FAILURE;
+        } else if (ret == 1) {
+            ret = ioctl(out_fd, UBI_IOCVOLUP, &volume_size);
+            if (ret == -1) {
+                close(in_fd);
+                close(out_fd);
+                fprintf(stderr, "Failed to setup UBI volume '%s': %m\n", output_path);
+                return EXIT_FAILURE;
+            }
+            write_optimized = false;
         }
-        write_optimized = false;
     }
 
     size_t len;
