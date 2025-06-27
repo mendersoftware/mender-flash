@@ -271,7 +271,6 @@ int main(int argc, char *argv[]) {
     if (out_fd == -1) {
         fprintf(stderr, "Failed to open '%s' for writing: %m\n", output_path);
         close(in_fd);
-        close(out_fd);
         return EXIT_FAILURE;
     }
 
@@ -384,6 +383,8 @@ int main(int argc, char *argv[]) {
 #endif  /* __linux__ */
 
     close(in_fd);
+    /* close() doesn't guarantee a sync */
+    fsync(out_fd);
     close(out_fd);
 
     if (!success) {
