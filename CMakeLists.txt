@@ -9,7 +9,7 @@ if($CACHE{COVERAGE})
   set(CMAKE_C_FLAGS "--coverage $CACHE{CMAKE_C_FLAGS}")
 endif()
 
-add_compile_options(-Wall -Wextra -Werror)
+add_compile_options(-Wall -Wextra -Werror -fanalyzer)
 add_executable(mender-flash main.c)
 
 install(TARGETS mender-flash
