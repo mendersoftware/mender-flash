@@ -33,6 +33,16 @@ tests+coverage:
     paths:
       - coverage.lcov
 
+tests:32bit:
+  stage: test
+  image: debian:12
+  before_script:
+    - apt update && apt install -yyq g++ g++-multilib cmake make lcov
+  script:
+    - cmake -D CMAKE_C_FLAGS="-m32" .
+    - make --jobs=$(nproc --all) --keep-going
+    - make check
+
 publish:coverage:
   stage: publish
   image: python:3.11
