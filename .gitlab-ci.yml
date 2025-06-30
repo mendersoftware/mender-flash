@@ -11,8 +11,6 @@ include:
     file: '.gitlab-ci-check-commits.yml'
   - project: 'Northern.tech/Mender/mendertesting'
     file: '.gitlab-ci-check-license.yml'
-  - project: 'Northern.tech/Mender/mendertesting'
-    file: '.gitlab-ci-check-c++.yml'
 
 variables:
   GIT_SUBMODULE_STRATEGY: recursive
@@ -21,35 +19,35 @@ default:
   tags:
     - oslo-xps
 
-.test:static-template:
+tests+coverage:
   stage: test
-  image: debian:11
+  image: debian:12
   before_script:
-    - apt update && apt install -yyq g++ cmake git make lcov pkg-config
-
-test:no-tests:
-  extends: .test:static-template
-  script:
-    - cmake -D BUILD_TESTS=OFF .
-    - make --jobs=$(nproc --all) --keep-going
-
-test:unit:
-  extends: .test:static-template
+    - apt update && apt install -yyq g++ cmake make lcov
   script:
     - cmake -D COVERAGE=ON .
     - make --jobs=$(nproc --all) --keep-going coverage
+    - make coverage
   artifacts:
     expire_in: 2w
-    reports:
-      junit: reports/*.xml
     paths:
-      - tests/coverage.lcov
+      - coverage.lcov
 
-publish:tests:
+tests:32bit:
+  stage: test
+  image: debian:12
+  before_script:
+    - apt update && apt install -yyq g++ g++-multilib cmake make lcov
+  script:
+    - cmake -D CMAKE_C_FLAGS="-m32" .
+    - make --jobs=$(nproc --all) --keep-going
+    - make check
+
+publish:coverage:
   stage: publish
   image: python:3.11
   dependencies:
-    - test:unit
+    - tests+coverage
   before_script:
     # Install dependencies
     - apt update && apt install -yyq lcov
@@ -71,5 +69,5 @@ publish:tests:
     - cpp-coveralls
       --repo-token ${COVERALLS_TOKEN}
       --no-gcov
-      --lcov-file tests/coverage.lcov
+      --lcov-file coverage.lcov
 
