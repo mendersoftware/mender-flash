@@ -159,6 +159,15 @@ bool shovel_data(int in_fd, int out_fd, off_t len, bool write_optimized, size_t 
  * @return 1 if true, 0 if false, -1 in case of an error
  */
 int is_ubi_device(char *path) {
+    struct stat sb;
+    if ((stat(path, &sb) == -1) && (errno != ENOENT)) {
+        fprintf(stderr, "Failed to stat() output '%s': %m\n", path);
+        return -1;
+    }
+    if (!S_ISCHR(sb.st_mode)) {
+        return 0;
+    }
+
     char *sysfs_ubi_dir;
     if (asprintf(&sysfs_ubi_dir, "/sys/class/ubi/%s", basename(path)) == -1) {
         fprintf(stderr, "Cannot check if output '%s' is a UBI device: %m\n", path);
@@ -252,7 +261,6 @@ int main(int argc, char *argv[]) {
     }
 
     int in_fd;
-    int out_fd;
     if (strcmp(input_path, "-") == 0) {
         in_fd = STDIN_FILENO;
     } else {
@@ -263,6 +271,24 @@ int main(int argc, char *argv[]) {
         }
     }
 
+    struct stat in_fd_stat;
+    if (fstat(in_fd, &in_fd_stat) == -1) {
+        close(in_fd);
+        fprintf(stderr, "Failed to stat() input '%s': %m\n", input_path);
+        return EXIT_FAILURE;
+    }
+
+    int is_ubi = is_ubi_device(output_path);
+    if (is_ubi == -1) {
+        /* error already logged */
+        close(in_fd);
+        return EXIT_FAILURE;
+    } else if (is_ubi == 1) {
+        write_optimized = false;
+        fsync_interval = 0;
+    }
+
+    int out_fd;
     if (write_optimized) {
         out_fd = open(output_path, O_CREAT | O_RDWR, 0600);
     } else {
@@ -274,38 +300,11 @@ int main(int argc, char *argv[]) {
         return EXIT_FAILURE;
     }
 
-    struct stat in_fd_stat;
-    if (fstat(in_fd, &in_fd_stat) == -1) {
+    if ((is_ubi == 1) && (ioctl(out_fd, UBI_IOCVOLUP, &volume_size) == -1)) {
+        fprintf(stderr, "Failed to setup UBI volume '%s': %m\n", output_path);
         close(in_fd);
         close(out_fd);
-        fprintf(stderr, "Failed to stat() input '%s': %m\n", input_path);
         return EXIT_FAILURE;
-    }
-
-    struct stat out_fd_stat;
-    if (fstat(out_fd, &out_fd_stat) == -1) {
-        close(in_fd);
-        close(out_fd);
-        fprintf(stderr, "Failed to stat() output '%s': %m\n", output_path);
-        return EXIT_FAILURE;
-    }
-    if (S_ISCHR(out_fd_stat.st_mode)) {
-        int ret = is_ubi_device(output_path);
-        if (ret == -1) {
-            /* error already logged */
-            close(in_fd);
-            close(out_fd);
-            return EXIT_FAILURE;
-        } else if (ret == 1) {
-            ret = ioctl(out_fd, UBI_IOCVOLUP, &volume_size);
-            if (ret == -1) {
-                close(in_fd);
-                close(out_fd);
-                fprintf(stderr, "Failed to setup UBI volume '%s': %m\n", output_path);
-                return EXIT_FAILURE;
-            }
-            write_optimized = false;
-        }
     }
 
     size_t len;
