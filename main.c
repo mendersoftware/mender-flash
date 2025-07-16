@@ -359,18 +359,21 @@ int main(int argc, char *argv[]) {
             sendfile_fn = sendfile;
         }
 
-        if (fsync_interval == 0) {
-            fsync_interval = len;
-        }
         ssize_t ret;
         off_t n_unsynced = 0;
+        size_t chunk_size;
+        if (fsync_interval != 0) {
+            chunk_size = MIN_SIZE(len, fsync_interval);
+        } else {
+            chunk_size = len;
+        }
         do {
-            ret = sendfile_fn(out_fd, in_fd, 0, MIN_SIZE(len, fsync_interval));
+            ret = sendfile_fn(out_fd, in_fd, 0, chunk_size);
             if (ret > 0) {
                 len -= ret;
                 stats.total_bytes += ret;
                 n_unsynced += ret;
-                if (n_unsynced >= fsync_interval) {
+                if ((fsync_interval != 0) && (n_unsynced >= fsync_interval)) {
                     fsync(out_fd);
                     n_unsynced = 0;
                 }
@@ -382,8 +385,11 @@ int main(int argc, char *argv[]) {
 #endif  /* __linux__ */
 
     close(in_fd);
-    /* close() doesn't guarantee a sync */
-    fsync(out_fd);
+    /* close() doesn't guarantee a sync, but we should allow using
+       --fsync-interval=0 to disable fsync completely. */
+    if (fsync_interval != 0) {
+        fsync(out_fd);
+    }
     close(out_fd);
 
     if (!success) {

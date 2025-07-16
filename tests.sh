@@ -214,6 +214,7 @@ basic_write_with_no_sync_test() {
   dd if=/dev/urandom of="$input" bs=$n_bytes count=1 >/dev/null 2>&1 &&
     $MEN_FLASH --fsync-interval 0 -i "$input" -o "$output" > "$stats"
   ret=$?
+  sync "$output"
 
   if [ $ret = 0 ]; then
     diff "$input" "$output" >/dev/null || { echo "Input and output differ" && ret=1; }
@@ -303,6 +304,7 @@ double_write_everything_with_no_sync_test() {
     $MEN_FLASH -i "$input" -o "$output" > "$stats" &&
     $MEN_FLASH -w --fsync-interval 0 -i "$input" -o "$output" > "$stats"
   ret=$?
+  sync "$output"
 
   if [ $ret = 0 ]; then
     diff "$input" "$output" >/dev/null || { echo "Input and output differ" && ret=1; }
@@ -359,6 +361,7 @@ pipe_basic_write_with_no_sync_test() {
   dd if=/dev/urandom of="$input" bs=$n_bytes count=1 >/dev/null 2>&1 &&
     cat "$input" | $MEN_FLASH --fsync-interval 0 --input-size $n_bytes -i - -o "$output" > "$stats"
   ret=$?
+  sync "$output"
 
   if [ $ret = 0 ]; then
     diff "$input" "$output" >/dev/null || { echo "Input and output differ" && ret=1; }
