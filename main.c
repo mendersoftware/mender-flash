@@ -330,8 +330,8 @@ int main(int argc, char *argv[]) {
     success = shovel_data(in_fd, out_fd, len, write_optimized, fsync_interval, &stats, &error);
 #else  /* __linux__ */
     /* The fancy syscalls below don't support write-optimized approach or
-       syncing so we cannot use them for that. */
-    if (write_optimized) {
+       UBI devices so we cannot use them for that. */
+    if ((is_ubi == 1) || write_optimized) {
         success = shovel_data(in_fd, out_fd, len, write_optimized, fsync_interval, &stats, &error);
     } else {
         /***
