@@ -43,6 +43,7 @@
  */
 #define MIN_SIZE(X, Y) ((size_t) MIN(((uintmax_t) SIZE_MAX), (MIN(((uintmax_t) X), ((uintmax_t) Y)))))
 
+#define SHORT_OPTS "hws:f:i:o:"
 static struct option long_options[] = {
     {"help", no_argument, 0, 'h'},
     {"write-everything", no_argument, 0, 'w'},
@@ -204,7 +205,7 @@ int main(int argc, char *argv[]) {
     off_t fsync_interval = BLOCK_SIZE;
 
     int option_index = 0;
-    int c = getopt_long(argc, argv, "hws:f:i:o:", long_options, &option_index);
+    int c = getopt_long(argc, argv, SHORT_OPTS, long_options, &option_index);
     while (c != -1) {
         switch (c) {
         case 'h':
@@ -251,7 +252,7 @@ int main(int argc, char *argv[]) {
             PrintHelp();
             return EXIT_FAILURE;
         }
-        c = getopt_long(argc, argv, "hws:i:o:", long_options, &option_index);
+        c = getopt_long(argc, argv, SHORT_OPTS, long_options, &option_index);
     }
 
     if ((input_path == NULL) || (output_path == NULL)) {

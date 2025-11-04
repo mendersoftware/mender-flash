@@ -211,8 +211,10 @@ basic_write_with_no_sync_test() {
   local output="${TEST_DIR}/test.out"
   local stats="${TEST_DIR}/test.stats"
 
+  # Use '-f' here instead of '--fsync-interval' so that we test the short option
+  # somewhere too.
   dd if=/dev/urandom of="$input" bs=$n_bytes count=1 >/dev/null 2>&1 &&
-    $MEN_FLASH --fsync-interval 0 -i "$input" -o "$output" > "$stats"
+    $MEN_FLASH -f 0 -i "$input" -o "$output" > "$stats"
   ret=$?
   sync "$output"
 
