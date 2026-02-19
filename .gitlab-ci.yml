@@ -5,6 +5,10 @@ stages:
   - trigger
 
 include:
+  - project: Northern.tech/Mender/mendertesting
+    file:
+      - qa-common/runner.yml
+      - qa-common/retry.yml
   - project: 'Northern.tech/Mender/mendertesting'
     file: '.gitlab-ci-github-status-updates.yml'
   - project: 'Northern.tech/Mender/mendertesting'
@@ -18,11 +22,13 @@ variables:
 default:
   tags:
     - oslo-xps
+  retry: !reference [.qa-common-default-retry, retry]
 
 tests+coverage:
   stage: test
   image: ${CI_DEPENDENCY_PROXY_DIRECT_GROUP_IMAGE_PREFIX}/debian:12
   before_script:
+    - !reference [.qa-common-network-apt-retry, before_script]
     - apt update && apt install -yyq g++ cmake make lcov
   script:
     - cmake -D COVERAGE=ON .
@@ -37,6 +43,7 @@ tests:32bit:
   stage: test
   image: ${CI_DEPENDENCY_PROXY_DIRECT_GROUP_IMAGE_PREFIX}/debian:12
   before_script:
+    - !reference [.qa-common-network-apt-retry, before_script]
     - apt update && apt install -yyq g++ g++-multilib cmake make lcov
   script:
     - cmake -D CMAKE_C_FLAGS="-m32" .
@@ -47,6 +54,7 @@ tests:static-analysis:
   stage: test
   image: ${CI_DEPENDENCY_PROXY_DIRECT_GROUP_IMAGE_PREFIX}/debian:12
   before_script:
+    - !reference [.qa-common-network-apt-retry, before_script]
     - apt update && apt install -yyq g++ g++-multilib cmake make lcov
   script:
     - cmake -D CMAKE_C_FLAGS="-fanalyzer" .
@@ -59,6 +67,7 @@ publish:coverage:
     - tests+coverage
   before_script:
     # Install dependencies
+    - !reference [.qa-common-network-apt-retry, before_script]
     - apt update && apt install -yyq lcov
     - pip install cpp-coveralls pyyaml
 
